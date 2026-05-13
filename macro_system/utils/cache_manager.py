@@ -43,3 +43,10 @@ class CacheManager:
             del self._cache[key]
             return True
         return False
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """获取缓存统计信息"""
+        return {
+            "count": len(self._cache),
+            "ttl_hours": self.ttl.days * 24 + self.ttl.seconds // 3600
+        }

@@ -51,7 +51,10 @@ def cmd_check(args):
         return
     
     # 2. 磁盘检查
-    total, used, percent = get_disk_usage("/opt/macro-push/data")
+    disk_info = get_disk_usage("/opt/macro-push/data")
+    total = disk_info.get("total", 0)
+    used = disk_info.get("used", 0)
+    percent = disk_info.get("percent", 0)
     print(f"💾 磁盘使用：{used:.2f}GB / {total:.2f}GB ({percent:.1f}%)")
     
     # 3. 数据库大小
@@ -61,7 +64,7 @@ def cmd_check(args):
     # 4. 缓存统计
     cache = get_cache()
     stats = cache.get_stats()
-    print(f"📦 缓存条目：{stats['total_entries']}")
+    print(f"📦 缓存条目：{stats.get('count', 0)}")
     
     print("✅ 健康检查通过")
 
