@@ -1,0 +1,21 @@
+# Macro System 依赖列表
+# 生产环境请使用: pip install -r requirements.txt
+
+# === 核心依赖 ===
+pandas>=1.5.0
+numpy>=1.20.0
+akshare>=1.9.0
+python-dotenv>=0.19.0
+requests>=2.25.0
+
+# === 可视化与 Dashboard (可选) ===
+streamlit>=1.28.0
+plotly>=5.10.0
+
+# === 可选依赖 ===
+# fredapi>=0.9.9  # 美国宏观数据 (需 API Key)
+# zhipuai>=2.0.0  # 智谱 AI (需 API Key)
+
+# === 开发依赖 ===
+# pytest>=7.0.0
+# mypy>=0.990

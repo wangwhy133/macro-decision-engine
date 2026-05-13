@@ -1,0 +1,22 @@
+{
+  "_comment": "Macro System 配置文件示例。复制为 ~/.macro_config.json 并修改。",
+  "data_dir": "/opt/macro-push/data",
+  "db_path": "/opt/macro-push/data/macro.db",
+  "fred_api_key": "YOUR_FRED_API_KEY_HERE",
+  "zhipu_key": "YOUR_ZHIPU_API_KEY_HERE",
+  "push": {
+    "feishu": {
+      "enabled": false,
+      "webhook": ""
+    },
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "chat_id": ""
+    }
+  },
+  "schedule": {
+    "daily_push_time": "16:00",
+    "timezone": "Asia/Shanghai"
+  }
+}
