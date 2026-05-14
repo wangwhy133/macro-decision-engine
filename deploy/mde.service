@@ -1,0 +1,16 @@
+[Unit]
+Description=Macro Decision Engine - Daily Review Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/.openclaw/workspace/macro-decision-engine
+Environment="NODE_ENV=production"
+Environment="TUSHARE_TOKEN=your_token_here"
+ExecStart=/usr/bin/npx tsx src/cli/daily-review.ts
+# 可选：发送结果到 Telegram/钉钉 (需配合 webhook 脚本)
+# ExecStartPost=/root/.openclaw/workspace/macro-decision-engine/deploy/send-telegram.sh
+
+[Install]
+WantedBy=multi-user.target

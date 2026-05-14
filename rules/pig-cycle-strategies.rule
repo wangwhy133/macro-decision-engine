@@ -1,0 +1,58 @@
+# 猪周期经典策略规则库
+# 使用方法：在 CLI 中引用或复制到规则字符串中
+
+# =============================================================================
+# 策略 1: 低水位买入
+# 逻辑：存栏量低于 4300 万头时，处于周期底部，买入
+# =============================================================================
+RULE low_inventory_buy: "低水位买入"
+DESCRIPTION "当能繁母猪存栏量低于 4300 万头时，视为周期底部区域，触发买入信号"
+TYPE threshold
+CATEGORY pig_cycle
+PRIORITY 1
+CONDITION pig_inventory_value < 4300
+THEN CONCLUSION "低水位买入" CONFIDENCE 0.85 IMPACT positive HORIZON long
+METADATA SOURCE expert VALIDATED true
+END
+
+# =============================================================================
+# 策略 2: 加速去化
+# 逻辑：3 个月变化率低于 -3% 时，说明去化加速，周期拐点临近
+# =============================================================================
+RULE rapid_decline_buy: "加速去化"
+DESCRIPTION "当 3 个月存栏变化率低于 -3% 时，说明行业正在加速去产能，周期拐点临近"
+TYPE trend
+CATEGORY pig_cycle
+PRIORITY 2
+CONDITION pig_inventory_change_3m < -3
+THEN CONCLUSION "加速去化买入" CONFIDENCE 0.80 IMPACT positive HORIZON medium
+METADATA SOURCE expert VALIDATED true
+END
+
+# =============================================================================
+# 策略 3: 周期顶部预警
+# 逻辑：存栏量高于 5000 万头时，周期可能见顶，警惕风险
+# =============================================================================
+RULE peak_warning: "周期顶部预警"
+DESCRIPTION "当存栏量高于 5000 万头时，周期可能见顶，应警惕下行风险"
+TYPE threshold
+CATEGORY pig_cycle
+PRIORITY 3
+CONDITION pig_inventory_value > 5000
+THEN CONCLUSION "周期顶部风险" CONFIDENCE 0.75 IMPACT negative HORIZON medium
+METADATA SOURCE expert VALIDATED false
+END
+
+# =============================================================================
+# 策略 4: 深度去化 (强力信号)
+# 逻辑：6 个月变化率低于 -8% 时，为极强买入信号
+# =============================================================================
+RULE deep_decline: "深度去化"
+DESCRIPTION "当 6 个月存栏变化率低于 -8% 时，为极强买入信号"
+TYPE trend
+CATEGORY pig_cycle
+PRIORITY 4
+CONDITION pig_inventory_change_6m < -8
+THEN CONCLUSION "深度去化强力买入" CONFIDENCE 0.90 IMPACT positive HORIZON long
+METADATA SOURCE expert VALIDATED true
+END

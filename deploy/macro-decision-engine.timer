@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Macro Decision Engine Daily at 18:00
+Requires=macro-decision-engine.service
+
+[Timer]
+OnCalendar=*-*-* 18:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,8 @@
+# 宏观决策支持引擎 - Cron 定时任务配置
+# 用法：crontab -e 然后粘贴以下内容
+
+# 每天收盘后 (下午 6 点) 自动运行复盘
+0 18 * * * cd /root/.openclaw/workspace/macro-decision-engine && /usr/bin/npx tsx src/cli/daily-review.ts >> logs/daily-review.log 2>&1
+
+# 或者每周一早上 8 点运行周度复盘
+# 0 8 * * 1 cd /root/.openclaw/workspace/macro-decision-engine && /usr/bin/npx tsx src/cli/daily-review.ts --mode=weekly >> logs/weekly-review.log 2>&1

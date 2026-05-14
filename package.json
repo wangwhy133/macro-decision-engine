@@ -1,0 +1,49 @@
+{
+  "name": "macro-decision-engine",
+  "version": "1.0.0",
+  "description": "宏观决策支持引擎 - 数据可信度 + 规则推理 + AI解释 + 复盘校准",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEput",
+    "daily": "tsx src/cli/daily-review.ts",
+    "backtest": "tsx src/cli/backtest.ts",
+    "report": "tsx src/cli/generate-report.ts",
+    "init": "tsx src/cli/init-data.ts",
+    "decision": "tsx src/cli/generate-decision-json.ts",
+    "debug": "tsx src/cli/debug-data.ts",
+    "simulate-crisis": "tsx src/cli/simulate-crisis.ts",
+    "load-real": "tsx src/cli/load-real-data.ts",
+    "load-csv": "tsx src/cli/load-from-csv.ts",
+    "serve": "tsx src/server/index.ts",
+    "monitor": "tsx src/monitor/index.ts",
+    "smart": "tsx src/cli/smart-decision.ts"
+  },
+  "keywords": [
+    "macro",
+    "decision",
+    "rule-engine",
+    "ai",
+    "finance"
+  ],
+  "author": "王力",
+  "license": "MIT",
+  "dependencies": {
+    "sql.js": "^1.14.1",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.8",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

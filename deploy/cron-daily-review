@@ -1,0 +1,9 @@
+# 宏观决策引擎 - 每日定时任务
+# 每天上午 9:00 执行复盘 (A 股开盘后)
+0 9 * * * cd /root/.openclaw/workspace/macro-decision-engine && /usr/bin/npx tsx src/cli/daily-review.ts >> /var/log/mde-daily.log 2>&1
+
+# 每周一上午 8:00 执行周度回测
+0 8 * * 1 cd /root/.openclaw/workspace/macro-decision-engine && /usr/bin/npx tsx src/cli/backtest.ts >> /var/log/mde-backtest.log 2>&1
+
+# 每月 1 号生成月度报告
+0 9 1 * * cd /root/.openclaw/workspace/macro-decision-engine && /usr/bin/npx tsx src/cli/generate-report.ts >> /var/log/mde-report.log 2>&1

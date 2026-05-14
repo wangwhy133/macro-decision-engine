@@ -1,0 +1,36 @@
+# 依赖
+node_modules/
+dist/
+.pnp/
+.pnp.js
+
+# 构建产物
+*.tsbuildinfo
+
+# 环境与配置
+.env
+.env.local
+.env.production
+*.log
+
+# 数据库与数据文件
+*.db
+*.sqlite
+*.sqlite3
+reports/*.json
+reports/*.md
+!reports/.gitkeep
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 临时文件
+tmp/
+temp/
