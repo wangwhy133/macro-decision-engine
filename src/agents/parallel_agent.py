@@ -118,11 +118,25 @@ RSI 变化：{rsi_trend}
     
     async def run_macro_agent(self) -> str:
         """运行宏观分析 Agent"""
-        # 模拟宏观数据 (实际应从数据库读取)
+        # 获取周期信号
+        try:
+            from src.services.supply_demand_monitor import get_monitor
+            monitor = get_monitor()
+            opps = monitor.get_opportunities()
+            cycle_context = ""
+            if opps:
+                cycle_context = "\n[周期信号]\n" + "\n".join([f"- {o['industry_name']}: {o['type']} ({o['reason']})" for o in opps[:3]])
+            else:
+                cycle_context = "\n[周期信号] 暂无显著周期信号"
+        except:
+            cycle_context = "\n[周期信号] 数据未更新"
+        
+        # 模拟宏观数据
         macro_sim = "利率维持高位，通胀温和"
         
         prompt = f"""
 [宏观环境] {macro_sim}
+{cycle_context}
 
 [任务]
 判断宏观环境是 'Risk-On' 还是 'Risk-Off'。

@@ -1,0 +1,30 @@
+[
+  {
+    "industry": "pig",
+    "industry_name": "\u751f\u732a\u517b\u6b96",
+    "timestamp": "2026-05-15T10:42:11.248313",
+    "current_price": 14.0,
+    "cost_line": 15.0,
+    "pain_index": 53.16666666666667,
+    "mania_index": 0.0,
+    "stage": "\u8427\u6761\u4e2d\u671f (\u78e8\u5e95\u671f)",
+    "action": "WATCH (\u7b49\u5f85\u4fe1\u53f7)",
+    "signal": "NEUTRAL",
+    "confidence": 0.5,
+    "inventory_trend": "decreasing"
+  },
+  {
+    "industry": "memory",
+    "industry_name": "\u5b58\u50a8\u82af\u7247",
+    "timestamp": "2026-05-15T10:42:11.250736",
+    "current_price": 100.0,
+    "cost_line": 90.0,
+    "pain_index": 0.0,
+    "mania_index": 56.00000000000001,
+    "stage": "\u7e41\u8363\u4e2d\u671f (\u6269\u5f20\u671f)",
+    "action": "HOLD (\u6301\u6709\u4eab\u53d7\u6ce1\u6cab)",
+    "signal": "NEUTRAL",
+    "confidence": 0.6,
+    "inventory_trend": "increasing"
+  }
+]
