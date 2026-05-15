@@ -1,0 +1,21 @@
+# MDE System 配置
+{
+  "version": "10.0.0",
+  "environment": "production",
+  "strategies": {
+    "pig_cycle": {
+      "enabled": true,
+      "symbols": ["000629.SZ"],
+      "params": {
+        "pain_threshold": 0.85
+      }
+    }
+  },
+  "risk": {
+    "max_position_total": 0.8,
+    "max_drawdown_daily": 0.05
+  },
+  "execution": {
+    "mode": "paper"
+  }
+}
