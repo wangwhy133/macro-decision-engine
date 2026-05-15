@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-05-15T13:23:17.940409",
+  "data": {
+    "industry": "pig",
+    "date": "2026-05-15",
+    "pork_price": 14.67,
+    "piglet_price": 8.8,
+    "grain_ratio": 9.17,
+    "breeding_sows_change": 0.34,
+    "profit_margin": -85.25,
+    "status": "updated"
+  }
+}

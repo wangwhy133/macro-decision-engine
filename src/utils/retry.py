@@ -157,13 +157,14 @@ if __name__ == "__main__":
     
     print(f"测试 1: {success_func()}")
     
-    # 测试 2: 失败后重试成功
-    attempt_count = 0
+    # 测试 2: 失败后重试成功 (使用闭包)
+    class Counter:
+        count = 0
+    
     @retry_with_fallback(max_retries=3)
     def fail_then_succeed():
-        nonlocal attempt_count
-        attempt_count += 1
-        if attempt_count < 3:
+        Counter.count += 1
+        if Counter.count < 3:
             raise ValueError("模拟失败")
         return "重试成功"
     

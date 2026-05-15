@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-05-15T13:23:17.943493",
+  "data": {
+    "industry": "semiconductor",
+    "date": "2026-05-15",
+    "sales_yoy": 11.91,
+    "capex_growth": 23.23,
+    "inventory_days": 108.3,
+    "price_momentum": 66.97,
+    "status": "updated"
+  }
+}

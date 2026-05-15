@@ -1,0 +1,19 @@
+[
+  {
+    "action": "BUY",
+    "shares": 81,
+    "price": 100.0,
+    "amount": 8100.0,
+    "exposure": 0.081,
+    "signal_strength": 8.0,
+    "kelly_fraction": 0.08125000000000002,
+    "target_ratio": 0.08124999593750022,
+    "reason": "信号强度 8.0/10, 凯利 8.1%",
+    "status": "executed",
+    "mode": "paper",
+    "symbol": "TEST",
+    "side": "buy",
+    "timestamp": "2026-05-15T13:23:17.962927",
+    "message": "模拟单已下：buy 81股"
+  }
+]
