@@ -11,6 +11,7 @@ from .executor import BaseExecutor, PaperExecutor, ShadowExecutor, create_execut
 from .metrics import MetricCollector, metrics, record_latency, record_system
 from .state import StateManager
 from .retry import RetryConfig, CircuitBreaker, retry_with_config
+from .data import fusion_engine, NewsItem, HotTopic
 
 __version__ = "10.0.0"
 __all__ = [
@@ -26,6 +27,8 @@ __all__ = [
     # v11.0 新增
     'StateManager',
     'RetryConfig', 'CircuitBreaker', 'retry_with_config',
+    # v12.0 数据融合
+    'fusion_engine', 'NewsItem', 'HotTopic',
 ]
 
 def get_version():

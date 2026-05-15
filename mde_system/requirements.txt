@@ -6,3 +6,8 @@ watchdog>=3.0.0
 pandas>=2.0.0
 numpy>=1.24.0
 pytest>=7.0.0
+
+# 数据源
+akshare>=1.10.0
+mootdx>=0.10.0  # 可选
+
