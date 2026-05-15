@@ -9,6 +9,8 @@ from .exceptions import (
 from .config_model import MDEConfig, RiskConfig, ExecutionConfig
 from .executor import BaseExecutor, PaperExecutor, ShadowExecutor, create_executor
 from .metrics import MetricCollector, metrics, record_latency, record_system
+from .state import StateManager
+from .retry import RetryConfig, CircuitBreaker, retry_with_config
 
 __version__ = "10.0.0"
 __all__ = [
@@ -21,6 +23,9 @@ __all__ = [
     'BaseExecutor', 'PaperExecutor', 'ShadowExecutor', 'create_executor',
     # 指标
     'MetricCollector', 'metrics', 'record_latency', 'record_system',
+    # v11.0 新增
+    'StateManager',
+    'RetryConfig', 'CircuitBreaker', 'retry_with_config',
 ]
 
 def get_version():
