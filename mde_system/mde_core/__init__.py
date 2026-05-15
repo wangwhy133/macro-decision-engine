@@ -23,6 +23,9 @@ from .validation import ShadowBacktest, ParameterOptimizer, shadow_checker, para
 from .dynamic_risk import DynamicRiskEngine, RiskMetrics, risk_engine
 from .release import StrategyRelease, ReleaseStage, ReleaseManager, release_manager
 from .trace import generate_trace_id, get_trace_id, set_trace_id, clear_trace_id, TraceContext
+from .attribution import AttributionEngine, AttributionResult, attribution_engine
+from .portfolio_risk import PortfolioRiskManager, PortfolioRiskMetrics, portfolio_risk_manager
+from .hot_config import HotConfig, hot_config, init_hot_config
 
 __version__ = "10.0.0"
 __all__ = [
@@ -51,6 +54,10 @@ __all__ = [
     'DynamicRiskEngine', 'RiskMetrics', 'risk_engine',
     'StrategyRelease', 'ReleaseStage', 'ReleaseManager', 'release_manager',
     'generate_trace_id', 'get_trace_id', 'set_trace_id', 'clear_trace_id', 'TraceContext',
+    # v15.0 长期主义
+    'AttributionEngine', 'AttributionResult', 'attribution_engine',
+    'PortfolioRiskManager', 'PortfolioRiskMetrics', 'portfolio_risk_manager',
+    'HotConfig', 'hot_config', 'init_hot_config',
 ]
 
 def get_version():
