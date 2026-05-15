@@ -1,25 +1,27 @@
 """
-MDE Core - 核心模块导出 (v10.0.0)
+MDE Core - 完整核心模块导出 (v10.0.0)
 """
+
+from .exceptions import (
+    MDEException, DataException, StrategyException,
+    RiskException, OrderException, ConfigurationException, DatabaseException
+)
+from .config_model import MDEConfig, RiskConfig, ExecutionConfig
+from .executor import BaseExecutor, PaperExecutor, ShadowExecutor, create_executor
+from .metrics import MetricCollector, metrics, record_latency, record_system
 
 __version__ = "10.0.0"
 __all__ = [
-    "MDEException", "DataException", "StrategyException",
-    "RiskException", "OrderException", "ConfigurationException",
+    # 异常
+    'MDEException', 'DataException', 'StrategyException',
+    'RiskException', 'OrderException', 'ConfigurationException', 'DatabaseException',
+    # 配置
+    'MDEConfig', 'RiskConfig', 'ExecutionConfig',
+    # 执行器
+    'BaseExecutor', 'PaperExecutor', 'ShadowExecutor', 'create_executor',
+    # 指标
+    'MetricCollector', 'metrics', 'record_latency', 'record_system',
 ]
 
-class MDEException(Exception):
-    """MDE 基础异常"""
-    pass
-
-class RiskException(MDEException):
-    """风控异常"""
-    pass
-
-class ConfigurationException(MDEException):
-    """配置异常"""
-    pass
-
-# 简化版导出
 def get_version():
-    return "10.0.0"
+    return __version__
