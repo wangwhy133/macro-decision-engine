@@ -1,48 +1,95 @@
 # src/services/review_service.py
 """
-A. 复盘回填机制
+A. 复盘回填机制 (生产级增强版)
+
 负责记录决策日志，并在 T+1 日自动校准准确率
+
+增强功能:
+1. 使用实际决策价格计算回报
+2. 考虑交易手续费
+3. 正确的 HOLD 逻辑 (机会成本)
+4. 风控集成
+5. 日志系统
 """
+
 import duckdb
 import json
 import os
-from datetime import datetime
-import yfinance as yf
+from datetime import datetime, timedelta
+from typing import Dict, Optional, Tuple
+import logging
+
+# 导入风控和日志
+from src.risk.risk_control import get_risk_control, init_risk_control
+from src.utils.logger import setup_logger
+
+logger = setup_logger("MDE.Review")
 
 DB_PATH = "data/mde.duckdb"
 
+
 class ReviewService:
-    def __init__(self, db_path=DB_PATH):
+    """复盘校准服务"""
+    
+    def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
+        self.commission_rate = 0.001  # 手续费率 0.1%
+        
         # 确保数据目录存在
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        
+        # 初始化风控
+        self.rc = init_risk_control()
+        
         self.conn = duckdb.connect(db_path)
         self._init_db()
-
+    
     def _init_db(self):
         """初始化决策日志表"""
         self.conn.execute("""
-        CREATE TABLE IF NOT EXISTS decision_logs (
-            id TEXT PRIMARY KEY,
-            timestamp TIMESTAMP,
-            market_state TEXT,
-            agent_opinions TEXT,
-            final_decision TEXT,
-            confidence REAL,
-            reasoning TEXT,
-            actual_price_next REAL,
-            actual_return REAL,
-            is_correct BOOLEAN,
-            status TEXT DEFAULT 'PENDING'
-        )
+            CREATE TABLE IF NOT EXISTS decision_logs (
+                id TEXT PRIMARY KEY,
+                timestamp TIMESTAMP,
+                market_state TEXT,
+                agent_opinions TEXT,
+                final_decision TEXT,
+                confidence REAL,
+                reasoning TEXT,
+                decision_price REAL,  -- 新增：决策时的价格
+                actual_price_next REAL,
+                actual_return REAL,
+                is_correct BOOLEAN,
+                status TEXT DEFAULT 'PENDING'
+            )
         """)
-
-    def log_decision(self, decision_id, market_state, agent_opinions, final_decision, confidence, reasoning):
-        """记录一次决策"""
+        logger.info("✅ 决策日志表已初始化")
+    
+    def log_decision(
+        self,
+        decision_id: str,
+        market_state: Dict,
+        agent_opinions: Dict,
+        final_decision: str,
+        confidence: float,
+        reasoning: str,
+        decision_price: float
+    ):
+        """
+        记录一次决策
+        
+        Args:
+            decision_id: 决策 ID
+            market_state: 市场状态
+            agent_opinions: Agent 意见
+            final_decision: 最终决策 (BUY/SELL/HOLD)
+            confidence: 置信度
+            reasoning: 推理过程
+            decision_price: 决策时的价格 (关键!)
+        """
         self.conn.execute("""
-        INSERT OR REPLACE INTO decision_logs 
-        (id, timestamp, market_state, agent_opinions, final_decision, confidence, reasoning, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')
+            INSERT OR REPLACE INTO decision_logs 
+            (id, timestamp, market_state, agent_opinions, final_decision, confidence, reasoning, decision_price, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
         """, [
             decision_id,
             datetime.now(),
@@ -50,79 +97,191 @@ class ReviewService:
             json.dumps(agent_opinions),
             final_decision,
             confidence,
-            reasoning
+            reasoning,
+            decision_price
         ])
-        print(f"📝 决策已记录：{decision_id} -> {final_decision}")
-
+        
+        logger.info(f"📝 决策已记录：{decision_id} -> {final_decision} @ {decision_price}")
+    
+    def calculate_return(self, decision_price: float, current_price: float, action: str) -> Tuple[float, bool]:
+        """
+        计算回报率并判断是否正确
+        
+        Args:
+            decision_price: 决策时的价格
+            current_price: 当前价格 (T+1)
+            action: 决策动作 (BUY/SELL/HOLD)
+        
+        Returns:
+            (回报率，是否正确)
+        """
+        if action == 'BUY':
+            # 买入：价格上涨则赚钱
+            gross_return = (current_price - decision_price) / decision_price
+            net_return = gross_return - self.commission_rate  # 扣除手续费
+            is_correct = net_return > 0
+            
+        elif action == 'SELL':
+            # 卖出：价格下跌则赚钱
+            gross_return = (decision_price - current_price) / decision_price
+            net_return = gross_return - self.commission_rate
+            is_correct = net_return > 0
+            
+        elif action == 'HOLD':
+            # 持有：不产生收益，但有机会成本
+            # 简化处理：如果市场上涨，HOLD 错过机会，算错；市场下跌，HOLD 正确
+            gross_return = 0.0
+            net_return = 0.0
+            # 如果市场价格下跌，HOLD 是正确的 (避免了损失)
+            is_correct = (current_price < decision_price)
+        
+        else:
+            logger.warning(f"未知的决策动作：{action}")
+            net_return = 0.0
+            is_correct = False
+        
+        return net_return, is_correct
+    
     def calibrate_pending_decisions(self, symbol: str = "SPY"):
-        """校准所有未完成的决策 (T+1 逻辑)"""
-        print("🔄 开始校准历史决策...")
+        """
+        校准所有未完成的决策 (T+1 逻辑)
+        
+        Args:
+            symbol: 交易标的
+        """
+        logger.info("🔄 开始校准历史决策...")
         
         rows = self.conn.execute("""
-        SELECT id, timestamp, final_decision, confidence 
-        FROM decision_logs 
-        WHERE status = 'PENDING'
+            SELECT id, timestamp, final_decision, confidence, decision_price
+            FROM decision_logs
+            WHERE status = 'PENDING'
         """).fetchall()
-
+        
         if not rows:
-            print("✅ 无需校准")
+            logger.info("✅ 无需校准")
             return
-
-        # 获取最新价格用于校准 (简化逻辑：假设所有 PENDING 都是昨天的)
+        
+        # 获取最新价格
+        current_price = self._get_current_price(symbol)
+        logger.info(f"📊 {symbol} 最新价格：{current_price}")
+        
+        if current_price is None:
+            logger.error("❌ 无法获取当前价格，校准失败")
+            return
+        
+        # 逐条校准
+        for row in rows:
+            dec_id, ts, decision, conf, decision_price = row
+            
+            # 如果决策时没有记录价格，使用 400 作为默认值 (向后兼容)
+            if decision_price is None:
+                logger.warning(f"⚠️ 决策 {dec_id} 未记录价格，使用默认值 400")
+                decision_price = 400.0
+            
+            # 计算回报
+            net_return, is_correct = self.calculate_return(decision_price, current_price, decision)
+            
+            # 更新数据库
+            self.conn.execute("""
+                UPDATE decision_logs
+                SET actual_price_next = ?,
+                    actual_return = ?,
+                    is_correct = ?,
+                    status = 'COMPLETED'
+                WHERE id = ?
+            """, [current_price, net_return, is_correct, dec_id])
+            
+            # 输出结果
+            status_icon = "✅" if is_correct else "❌"
+            logger.info(f" {status_icon} 校准 {dec_id}: {decision} @ {decision_price} -> 回报 {net_return:.2%} ({'正确' if is_correct else '错误'})")
+        
+        logger.info("✅ 校准完成")
+    
+    def _get_current_price(self, symbol: str) -> Optional[float]:
+        """
+        获取当前价格
+        
+        Args:
+            symbol: 交易标的
+        
+        Returns:
+            当前价格，失败返回 None
+        """
         try:
+            import yfinance as yf
             ticker = yf.Ticker(symbol)
             hist = ticker.history(period="1d")
+            
             if hist.empty:
-                current_price = 0.0
-            else:
-                current_price = float(hist['Close'].iloc[-1])
-            print(f"📊 获取 {symbol} 最新收盘价：{current_price}")
+                logger.warning(f"⚠️ 获取 {symbol} 价格失败：空数据")
+                return None
+            
+            current_price = float(hist['Close'].iloc[-1])
+            logger.info(f"✅ 获取 {symbol} 最新收盘价：{current_price}")
+            return current_price
+            
         except Exception as e:
-            print(f"⚠️ 获取价格失败：{e}")
-            current_price = 0.0
-
-        for row in rows:
-            dec_id, ts, decision, conf = row
-            
-            # 简化逻辑：模拟回报率 (实际应获取 T+1 的收盘价)
-            # 假设基准价 400 (SPY 近似价)
-            mock_return = (current_price - 400) / 400 if current_price else 0.0
-            
-            is_win = False
-            if decision == 'BUY' and mock_return > 0:
-                is_win = True
-            elif decision == 'SELL' and mock_return < 0:
-                is_win = True
-            elif decision == 'HOLD':
-                is_win = True  # HOLD 默认不亏
-
-            self.conn.execute("""
-            UPDATE decision_logs 
-            SET actual_price_next = ?, actual_return = ?, is_correct = ?, status = 'COMPLETED'
-            WHERE id = ?
-            """, [current_price, mock_return, is_win, dec_id])
-            
-            status_icon = "✅" if is_win else "❌"
-            print(f" {status_icon} 校准 {dec_id}: 决策{decision} -> 结果{'正确' if is_win else '错误'}")
-
-    def get_stats(self):
+            logger.error(f"❌ 获取价格失败：{e}", exc_info=True)
+            return None
+    
+    def get_stats(self) -> Dict:
         """获取统计数据"""
         res = self.conn.execute("""
-        SELECT 
-            COUNT(*) as total,
-            SUM(is_correct) as correct,
-            AVG(actual_return) as avg_return
-        FROM decision_logs 
-        WHERE status = 'COMPLETED'
+            SELECT 
+                COUNT(*) as total,
+                SUM(is_correct) as correct,
+                AVG(actual_return) as avg_return
+            FROM decision_logs
+            WHERE status = 'COMPLETED'
         """).fetchone()
+        
+        total = res[0] or 0
+        correct = res[1] or 0
+        
         return {
-            'total': res[0],
-            'correct': res[1],
-            'accuracy': res[1]/res[0] if res[0] else 0,
+            'total': total,
+            'correct': correct,
+            'accuracy': correct / total if total > 0 else 0,
             'avg_return': res[2] or 0
         }
+    
+    def get_recent_decisions(self, limit: int = 10) -> list:
+        """获取最近的决策记录"""
+        rows = self.conn.execute("""
+            SELECT id, timestamp, final_decision, confidence, actual_return, is_correct, status
+            FROM decision_logs
+            ORDER BY timestamp DESC
+            LIMIT ?
+        """, [limit]).fetchall()
+        
+        return [
+            {
+                'id': r[0],
+                'timestamp': r[1],
+                'decision': r[2],
+                'confidence': r[3],
+                'return': r[4],
+                'correct': r[5],
+                'status': r[6]
+            }
+            for r in rows
+        ]
+
 
 if __name__ == "__main__":
+    # 测试复盘服务
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    
     svc = ReviewService()
-    svc.calibrate_pending_decisions()
-    print(f"📊 统计：{svc.get_stats()}")
+    
+    # 测试校准
+    svc.calibrate_pending_decisions("SPY")
+    
+    # 获取统计
+    stats = svc.get_stats()
+    print(f"📊 统计：{stats}")
+    
+    # 获取最近决策
+    recent = svc.get_recent_decisions(5)
+    print(f"📋 最近决策：{recent}")

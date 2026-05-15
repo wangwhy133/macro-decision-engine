@@ -1,0 +1,32 @@
+# MDE Requirements (Production v4.1)
+# 最后更新：2026-05-15
+
+# 核心依赖
+pandas>=1.5.0
+numpy>=1.23.0
+duckdb>=0.8.0
+
+# 技术指标计算
+pandas-ta>=0.3.14b
+
+# 数据获取
+yfinance>=0.2.0
+akshare>=1.10.0  # A 股数据源
+
+# HTTP 客户端
+httpx>=0.24.0
+
+# 环境变量
+python-dotenv>=1.0.0
+
+# 可视化看板
+streamlit>=1.28.0
+
+# 日志与配置
+# (Python 标准库 logging 已足够)
+
+# 可选：并发控制
+# filelock>=3.12.0  # 如需文件锁可启用
+
+# 可选：监控告警
+# requests>=2.31.0  # 用于发送告警通知
