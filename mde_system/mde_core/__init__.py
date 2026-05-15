@@ -17,6 +17,9 @@ from .data import (
     HealthChecker, health_checker,
     EventChain, EventAggregator, aggregator
 )
+from .async_support import io_executor, run_in_thread, async_wrap
+from .watchdog import ResourceQuota, Watchdog, default_quota, watchdog
+from .validation import ShadowBacktest, ParameterOptimizer, shadow_checker, param_optimizer
 
 __version__ = "10.0.0"
 __all__ = [
@@ -37,6 +40,10 @@ __all__ = [
     'SentimentAnalyzer', 'analyzer',
     'HealthChecker', 'health_checker',
     'EventChain', 'EventAggregator', 'aggregator',
+    # v13.0 高可用
+    'io_executor', 'run_in_thread', 'async_wrap',
+    'ResourceQuota', 'Watchdog', 'default_quota', 'watchdog',
+    'ShadowBacktest', 'ParameterOptimizer', 'shadow_checker', 'param_optimizer',
 ]
 
 def get_version():
