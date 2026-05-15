@@ -6,10 +6,11 @@ A. 复盘回填机制 (生产级增强版)
 
 增强功能:
 1. 使用实际决策价格计算回报
-2. 考虑交易手续费
+2. 考虑完整交易成本 (手续费 + 滑点 + 印花税)
 3. 正确的 HOLD 逻辑 (机会成本)
 4. 风控集成
 5. 日志系统
+6. 数据验证
 """
 
 import duckdb
@@ -22,6 +23,8 @@ import logging
 # 导入风控和日志
 from src.risk.risk_control import get_risk_control, init_risk_control
 from src.utils.logger import setup_logger
+from src.services.cost_calculator import get_cost_calculator
+from src.data.validation import validate_features
 
 logger = setup_logger("MDE.Review")
 
@@ -33,7 +36,9 @@ class ReviewService:
     
     def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
-        self.commission_rate = 0.001  # 手续费率 0.1%
+        
+        # 获取成本计算器
+        self.cost_calc = get_cost_calculator()
         
         # 确保数据目录存在
         os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -103,36 +108,53 @@ class ReviewService:
         
         logger.info(f"📝 决策已记录：{decision_id} -> {final_decision} @ {decision_price}")
     
-    def calculate_return(self, decision_price: float, current_price: float, action: str) -> Tuple[float, bool]:
+    def calculate_return(self, decision_price: float, current_price: float, action: str, quantity: int = 100) -> Tuple[float, bool]:
         """
-        计算回报率并判断是否正确
+        计算回报率并判断是否正确 (考虑完整交易成本)
         
         Args:
             decision_price: 决策时的价格
             current_price: 当前价格 (T+1)
             action: 决策动作 (BUY/SELL/HOLD)
+            quantity: 交易数量 (默认 100 股)
         
         Returns:
-            (回报率，是否正确)
+            (净回报率，是否正确)
         """
         if action == 'BUY':
-            # 买入：价格上涨则赚钱
-            gross_return = (current_price - decision_price) / decision_price
-            net_return = gross_return - self.commission_rate  # 扣除手续费
+            # 买入：计算完整成本
+            cost_info = self.cost_calc.calculate_total_cost(decision_price, quantity, 'BUY')
+            total_cost = cost_info['total']
+            
+            # 买入成本
+            buy_cost = decision_price * quantity + total_cost
+            
+            # 假设卖出价格 (当前价)
+            sell_revenue = current_price * quantity - self.cost_calc.calculate_total_cost(current_price, quantity, 'SELL')['total']
+            
+            # 净回报
+            net_return = (sell_revenue - buy_cost) / buy_cost
             is_correct = net_return > 0
             
         elif action == 'SELL':
-            # 卖出：价格下跌则赚钱
-            gross_return = (decision_price - current_price) / decision_price
-            net_return = gross_return - self.commission_rate
+            # 卖出：计算完整成本
+            cost_info = self.cost_calc.calculate_total_cost(decision_price, quantity, 'SELL')
+            total_cost = cost_info['total']
+            
+            # 卖出收入
+            sell_revenue = decision_price * quantity - total_cost
+            
+            # 假设买回成本
+            buy_cost = current_price * quantity + self.cost_calc.calculate_total_cost(current_price, quantity, 'BUY')['total']
+            
+            # 净回报
+            net_return = (sell_revenue - buy_cost) / (decision_price * quantity)
             is_correct = net_return > 0
             
         elif action == 'HOLD':
-            # 持有：不产生收益，但有机会成本
-            # 简化处理：如果市场上涨，HOLD 错过机会，算错；市场下跌，HOLD 正确
-            gross_return = 0.0
+            # 持有：无交易成本，但有机会成本
+            # 如果市场上涨，HOLD 错过机会；市场下跌，HOLD 正确
             net_return = 0.0
-            # 如果市场价格下跌，HOLD 是正确的 (避免了损失)
             is_correct = (current_price < decision_price)
         
         else:

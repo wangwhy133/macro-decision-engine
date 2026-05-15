@@ -8,6 +8,7 @@
 3. 失败降级模拟数据
 4. 风控集成：自动标记模拟数据
 5. 并发控制：文件锁防止数据损坏
+6. 数据验证：确保数据质量
 """
 
 import duckdb
@@ -24,6 +25,7 @@ from src.risk.risk_control import get_risk_control, init_risk_control, TradeActi
 from src.utils.logger import setup_logger
 from src.utils.filelock import file_lock
 from src.data.universal_loader import get_complete_data, DATA_SOURCE_SIMULATION
+from src.data.validation import validate_data, validate_features, clean_data
 
 logger = setup_logger("MDE.Features")
 
@@ -49,6 +51,17 @@ def build_features(symbol: str = "SPY") -> Dict[str, Any]:
     if df.empty:
         logger.error("❌ 无法获取任何数据")
         return {}
+    
+    # 数据验证
+    is_valid, issues = validate_data(df, symbol)
+    if not is_valid:
+        logger.warning(f"⚠️ 数据验证发现问题：{issues}")
+        # 尝试清洗数据
+        df = clean_data(df)
+        # 再次验证
+        is_valid, issues = validate_data(df, symbol)
+        if not is_valid:
+            logger.error(f"❌ 数据清洗后仍有问题：{issues}")
     
     # 计算技术指标
     try:
