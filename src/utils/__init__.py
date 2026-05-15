@@ -3,6 +3,7 @@
 
 from .logger import setup_logger, get_logger, log_info, log_warning, log_error, log_critical
 from .config import ConfigValidator, validate_and_init, get_api_key, ConfigurationError
+from .filelock import FileLock, file_lock, locked_write
 
 __all__ = [
     'setup_logger',
@@ -15,4 +16,7 @@ __all__ = [
     'validate_and_init',
     'get_api_key',
     'ConfigurationError',
+    'FileLock',
+    'file_lock',
+    'locked_write',
 ]

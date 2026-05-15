@@ -62,7 +62,7 @@ def setup_logger(
     log_file = os.path.join(log_dir, f"{name.lower()}.log")
     file_handler = RotatingFileHandler(
         log_file,
-        maxbytes=max_bytes,
+        maxBytes=max_bytes,
         backupCount=backup_count,
         encoding='utf-8'
     )
@@ -74,7 +74,7 @@ def setup_logger(
     error_log_file = os.path.join(log_dir, f"{name.lower()}_error.log")
     error_handler = RotatingFileHandler(
         error_log_file,
-        maxbytes=max_bytes,
+        maxBytes=max_bytes,
         backupCount=backup_count,
         encoding='utf-8'
     )

@@ -7,6 +7,7 @@
 2. 网络请求带指数退避重试 (应对限流)
 3. 失败降级模拟数据
 4. 风控集成：自动标记模拟数据
+5. 并发控制：文件锁防止数据损坏
 """
 
 import duckdb
@@ -21,6 +22,7 @@ from typing import Dict, Any
 # 导入风控和日志
 from src.risk.risk_control import get_risk_control, init_risk_control, TradeAction
 from src.utils.logger import setup_logger
+from src.utils.filelock import file_lock
 from src.data.universal_loader import get_complete_data, DATA_SOURCE_SIMULATION
 
 logger = setup_logger("MDE.Features")
@@ -111,8 +113,12 @@ def build_features(symbol: str = "SPY") -> Dict[str, Any]:
     }
     
     os.makedirs(FEATURES_DIR, exist_ok=True)
-    with open(f"{FEATURES_DIR}/latest_state.json", 'w') as f:
-        json.dump(feature_snapshot, f, indent=2)
+    
+    # 使用文件锁写入，防止并发冲突
+    feature_file = f"{FEATURES_DIR}/latest_state.json"
+    with file_lock(feature_file, timeout=10):
+        with open(feature_file, 'w', encoding='utf-8') as f:
+            json.dump(feature_snapshot, f, indent=2)
     
     if is_simulated:
         logger.warning(f"⚠️ 特征数据标记为 SIMULATED，交易已禁用")
