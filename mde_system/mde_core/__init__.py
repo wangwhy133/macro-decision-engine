@@ -20,6 +20,9 @@ from .data import (
 from .async_support import io_executor, run_in_thread, async_wrap
 from .watchdog import ResourceQuota, Watchdog, default_quota, watchdog
 from .validation import ShadowBacktest, ParameterOptimizer, shadow_checker, param_optimizer
+from .dynamic_risk import DynamicRiskEngine, RiskMetrics, risk_engine
+from .release import StrategyRelease, ReleaseStage, ReleaseManager, release_manager
+from .trace import generate_trace_id, get_trace_id, set_trace_id, clear_trace_id, TraceContext
 
 __version__ = "10.0.0"
 __all__ = [
@@ -44,6 +47,10 @@ __all__ = [
     'io_executor', 'run_in_thread', 'async_wrap',
     'ResourceQuota', 'Watchdog', 'default_quota', 'watchdog',
     'ShadowBacktest', 'ParameterOptimizer', 'shadow_checker', 'param_optimizer',
+    # v14.0 金融级风控
+    'DynamicRiskEngine', 'RiskMetrics', 'risk_engine',
+    'StrategyRelease', 'ReleaseStage', 'ReleaseManager', 'release_manager',
+    'generate_trace_id', 'get_trace_id', 'set_trace_id', 'clear_trace_id', 'TraceContext',
 ]
 
 def get_version():
