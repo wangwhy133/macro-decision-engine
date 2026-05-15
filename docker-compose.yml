@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # MDE API 服务
+  mde-api:
+    build: .
+    container_name: mde-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+      - ./.env:/app/.env
+    environment:
+      - MINIMAX_API_KEY=${MINIMAX_API_KEY}
+      - MDE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Streamlit 看板
+  mde-dashboard:
+    build: .
+    container_name: mde-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: streamlit run src/dashboard/app.py --server.address 0.0.0.0 --server.port 8501
+    depends_on:
+      - mde-api
+    restart: unless-stopped
+
+  # 定时任务 (数据抓取)
+  mde-crawler:
+    build: .
+    container_name: mde-crawler
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: python -m src.data.crawlers.scheduler
+    environment:
+      - MINIMAX_API_KEY=${MINIMAX_API_KEY}
+    restart: unless-stopped
