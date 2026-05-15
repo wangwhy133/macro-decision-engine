@@ -26,6 +26,9 @@ from .trace import generate_trace_id, get_trace_id, set_trace_id, clear_trace_id
 from .attribution import AttributionEngine, AttributionResult, attribution_engine
 from .portfolio_risk import PortfolioRiskManager, PortfolioRiskMetrics, portfolio_risk_manager
 from .hot_config import HotConfig, hot_config, init_hot_config
+from .hard_stop import HardStopConfig, HardStopEngine, hard_stop_engine
+from .decision_log import DecisionLog, DecisionLogger, decision_logger
+from .config_audit import ConfigAuditor, config_auditor
 
 __version__ = "10.0.0"
 __all__ = [
@@ -58,6 +61,10 @@ __all__ = [
     'AttributionEngine', 'AttributionResult', 'attribution_engine',
     'PortfolioRiskManager', 'PortfolioRiskMetrics', 'portfolio_risk_manager',
     'HotConfig', 'hot_config', 'init_hot_config',
+    # v16.0 逃生与透明
+    'HardStopConfig', 'HardStopEngine', 'hard_stop_engine',
+    'DecisionLog', 'DecisionLogger', 'decision_logger',
+    'ConfigAuditor', 'config_auditor',
 ]
 
 def get_version():
